@@ -2,16 +2,38 @@
 
 ## 1. System Design
 
-**a. Initial design**
+**3 core actions**
+1. track pet care tasks 
+2. record pet owner preferences and constraints
+3. produce and explain pet care plans based on known preferences 
 
+**a. Initial design**
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+
+*main objects*
+- pet owner
+    - attributes: name, location
+    - methods: createPlan, editPreference, editConstraint, addPet, removePet, editPetInfo, getPetHealth, add-/remove- Pref
+- pet
+    - attributes: name, species, breed, age, gender, healthCondition
+    - methods: getOwner, editInfo
+- plan
+    - attributes: pet, pet owner, tasks, 
+    - methods: editTask, getPreference
+- preferences
+    - attributes: pet owner, prefInfo, 
+    - methods: editPref
+
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
+1. removed owner ref after finding a logical bug in seeing that a pet cannot exist without an owner. Hence the 'add_owner' function was removed as well, and instead, have that pet -> owner lookup done by the Scheduler.
+2. Owner has no pet list so there was no way to record the pets they have
+3. Scheduler duplicates the owner's pet info, which is unnecessary because according to the UML, Owner has authority over Pets so the pet's info should be received through the Owner
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
