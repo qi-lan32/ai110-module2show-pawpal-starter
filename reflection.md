@@ -43,10 +43,14 @@
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+> My scheduler considers time and conflicts which I think is the most important constraints because the tasks can only be complete if the owner has the time to and have no other conflicting tasks to do so. 
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+> The scheduler flags the tasks as conflicting only when the time is identical, which means, there is no sense of duration for the tasks. The current scheduler goes for simiplicity, instead of accuracy, relying on the user to be responsible for their own calculation and estimation when creating new tasks to avoid conflict. The design is easy to reason about and quick, but it is prone to confliction.
 
 ---
 

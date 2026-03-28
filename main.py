@@ -1,4 +1,17 @@
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "tests"))
+
 from pawpal_system import Owner, Pet, Task, Scheduler
+from test_pawpal import (
+    test_mark_complete_updates_status,
+    test_add_task_increases_scheduler_task_count,
+    test_ownership_guard_raises_for_unowned_pet,
+    test_filter_by_pet_returns_only_that_pets_tasks,
+    test_filter_by_status_returns_matching_tasks,
+    test_complete_task_daily_spawns_next_occurrence,
+    test_complete_task_weekly_spawns_next_occurrence,
+    test_complete_task_one_time_does_not_spawn,
+)
 
 
 # ── Setup ──────────────────────────────────────────────────────────────────────
@@ -85,20 +98,50 @@ def print_schedule(scheduler: Scheduler) -> None:
 
 print_schedule(scheduler)
 
-# ── Verify ownership guard ─────────────────────────────────────────────────────
+# ── Conflict detection demo ────────────────────────────────────────────────────
+# Same-pet conflict: Buddy gets a second walk at 07:30 (same time as his generated walk)
+# Different-pet conflict: Whiskers gets a walk at 17:00 (same time as Buddy's afternoon walk)
 
-stranger_pet = Pet("Rex", "dog", "Labrador", 2, "male", "healthy")
-print("Testing ownership guard...")
-try:
-    scheduler.add_task(Task("walk", "10:00", "pending", 2, stranger_pet))
-except ValueError as e:
-    print(f"  Caught expected error: {e}")
+scheduler.add_task(Task(
+    task_type="grooming",
+    scheduled_time="07:30",   # Buddy already has a walk at 07:30 from create_plan
+    status="pending",
+    priority=2,
+    pet=buddy
+))
 
-# ── Verify task completion ─────────────────────────────────────────────────────
+scheduler.add_task(Task(
+    task_type="grooming",
+    scheduled_time="17:00",   # Buddy already has a walk at 17:00
+    status="pending",
+    priority=2,
+    pet=whiskers
+))
 
-print("\nCompleting Buddy's morning feeding...")
-morning_feed = next(t for t in scheduler.tasks
-                    if t.pet == buddy and t.task_type == "feeding" and t.scheduled_time == "07:00")
-morning_feed.mark_complete()
-print(f"  Status: {morning_feed.status}")
-print_schedule(scheduler)
+print("Checking for scheduling conflicts...")
+warnings = scheduler.detect_conflicts()
+if warnings:
+    for msg in warnings:
+        print(f"  {msg}")
+else:
+    print("  No conflicts found.")
+print()
+
+# ── Run tests ──────────────────────────────────────────────────────────────────
+
+tests = [
+    test_mark_complete_updates_status,
+    test_add_task_increases_scheduler_task_count,
+    test_ownership_guard_raises_for_unowned_pet,
+    test_filter_by_pet_returns_only_that_pets_tasks,
+    test_filter_by_status_returns_matching_tasks,
+    test_complete_task_daily_spawns_next_occurrence,
+    test_complete_task_weekly_spawns_next_occurrence,
+    test_complete_task_one_time_does_not_spawn,
+]
+
+print("Running tests...")
+for test_fn in tests:
+    test_fn()
+    print(f"  {test_fn.__name__}  PASSED")
+print()

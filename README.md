@@ -32,6 +32,15 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+## Smarter Scheduling
+
+The `Scheduler` class was extended with several features to make plan generation more reliable and useful:
+
+- **Task filtering** — `get_tasks_for_pet()`, `get_tasks_by_status()`, and `get_tasks_by_time()` let any part of the app query the schedule without ad-hoc list comprehensions. The Tasks and Schedule tabs in the UI use these directly.
+- **Safer plan generation** — `create_plan()` now calls `clear_plan()` before generating, so re-running never produces duplicates and never resurfaces tasks the user already removed. Manually added tasks are preserved.
+- **Recurring task completion** — `complete_task()` marks a task done and, using `timedelta`, automatically adds the next occurrence for `"daily"` (tomorrow) and `"weekly"` (7 days out) tasks. One-time tasks are left as-is.
+- **Conflict detection** — `detect_conflicts()` scans pending tasks and returns plain warning strings, never crashing. It distinguishes `[CONFLICT]` (same pet, same time) from `[WARNING]` (different pets overlapping), and results are shown inline in the Schedule tab.
+
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.
