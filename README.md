@@ -71,6 +71,28 @@ The core scheduling behaviors — recurrence, sorting, filtering, and conflict d
 
 ---
 
+## Features
+- Daily Plan Generation — create_plan() auto-generates a baseline set of tasks for every pet using the owner's preferences (walk time, feed times) and constraints (medication time). Dogs receive a daily walk; pets with non-healthy conditions receive a medication task. Re-running the plan never produces duplicates — previous auto-generated tasks are cleared first while manually added tasks are preserved.
+
+- Task Prioritization — prioritize_tasks() sorts all tasks by priority (descending) then by scheduled time (ascending), so the most urgent tasks always surface first. Priority levels: 4 = medication, 3 = feeding, 2 = walk, 1 = appointment.
+
+- Recurring Task Completion — complete_task() marks a task done and automatically schedules the next occurrence using timedelta: daily tasks recur tomorrow (+1 day), weekly tasks recur in 7 days (+7 days). One-time tasks (recurrence=None) are simply marked complete with no follow-up created.
+
+- Task Filtering — Three query methods let any part of the app retrieve tasks without ad-hoc loops:
+    - get_tasks_for_pet(pet) — all tasks belonging to a specific pet
+    - get_tasks_by_status(status) — all tasks matching "pending", "completed", or "skipped"
+    - get_tasks_by_time() — all tasks sorted chronologically by scheduled time
+
+- Conflict Detection — detect_conflicts() scans all pending tasks for scheduling overlaps and returns plain warning strings without ever raising an exception. It distinguishes two severity levels:
+    - [CONFLICT] — same pet has two tasks at the same time (physically impossible)
+    - [WARNING] — two different pets overlap at the same time (owner attention split)
+
+- Ownership Guard — add_task() raises a ValueError if the task's pet does not belong to the scheduler's owner, preventing tasks from being accidentally assigned to unregistered pets.
+
+## 📸 Demo
+
+<a href="PawPal+ demo.png" target="_blank"><img src='PawPal+ demo.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.

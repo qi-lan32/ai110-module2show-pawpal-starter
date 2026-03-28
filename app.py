@@ -1,5 +1,4 @@
 import streamlit as st
-from collections import defaultdict
 from pawpal_system import Pet, Task, Owner, Scheduler
 
 # ── Page config ───────────────────────────────────────────────────────────────
@@ -223,9 +222,26 @@ with tab_tasks:
                 else:
                     display_tasks = list(scheduler.tasks)
                 if filter_status != "All":
-                    display_tasks = scheduler.get_tasks_by_status(filter_status)
-                    if filter_pet != "All":
-                        display_tasks = [t for t in display_tasks if t.pet is sel_pet]
+                    display_tasks = [t for t in display_tasks if t.status == filter_status]
+
+                if display_tasks:
+                    st.dataframe(
+                        [
+                            {
+                                "Time": t.scheduled_time,
+                                "Type": t.task_type.capitalize(),
+                                "Pet": t.pet.name,
+                                "Priority": f"{PRIORITY_COLORS[t.priority]} {PRIORITY_LABELS[t.priority]}",
+                                "Status": f"{STATUS_ICONS.get(t.status, '')} {t.status}",
+                                "Recurs": t.recurrence or "—",
+                            }
+                            for t in display_tasks
+                        ],
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                    st.divider()
+
                 for i, task in enumerate(display_tasks):
                     icon = STATUS_ICONS.get(task.status, "")
                     badge = f"{PRIORITY_COLORS[task.priority]} {PRIORITY_LABELS[task.priority]}"
@@ -281,28 +297,51 @@ with tab_schedule:
             st.info("No tasks scheduled yet.")
         else:
             conflicts = scheduler.detect_conflicts()
-            if conflicts:
-                st.warning(f"⚠️ {len(conflicts)} scheduling conflict(s) detected!")
-                for msg in conflicts:
-                    st.caption(f"  • {msg}")
-            time_groups: dict = defaultdict(list)
-            for t in scheduler.get_tasks_by_time():
-                time_groups[t.scheduled_time].append(t)
-            for time_slot in time_groups.keys():
-                st.markdown(f"**🕐 {time_slot}**")
-                for t in time_groups[time_slot]:
-                    icon = STATUS_ICONS.get(t.status, "")
-                    badge = PRIORITY_COLORS[t.priority]
-                    st.markdown(
-                        f"&nbsp;&nbsp;&nbsp;{icon} {badge} "
-                        f"`{t.task_type.capitalize()}` — **{t.pet.name}** ({t.status})"
-                    )
-                st.write("")
+            hard_conflicts = [m for m in conflicts if m.startswith("[CONFLICT]")]
+            soft_warnings  = [m for m in conflicts if m.startswith("[WARNING]")]
+            if hard_conflicts:
+                with st.container():
+                    st.error(f"🚨 {len(hard_conflicts)} hard conflict(s) — same pet, same time:")
+                    for msg in hard_conflicts:
+                        st.error(f"  • {msg[len('[CONFLICT] '):]}")
+            if soft_warnings:
+                with st.container():
+                    st.warning(f"⚠️ {len(soft_warnings)} owner overlap warning(s):")
+                    for msg in soft_warnings:
+                        st.warning(f"  • {msg[len('[WARNING] '):]}")
+            if not conflicts:
+                st.success("No scheduling conflicts detected.")
+
+            st.dataframe(
+                [
+                    {
+                        "Time": t.scheduled_time,
+                        "Type": t.task_type.capitalize(),
+                        "Pet": t.pet.name,
+                        "Priority": f"{PRIORITY_COLORS[t.priority]} {PRIORITY_LABELS[t.priority]}",
+                        "Status": f"{STATUS_ICONS.get(t.status, '')} {t.status}",
+                        "Recurs": t.recurrence or "—",
+                    }
+                    for t in scheduler.get_tasks_by_time()
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
 
 # ─── TAB 4: Next Task ─────────────────────────────────────────────────────────
 with tab_next:
     st.header("Next Task")
     st.write("Shows the highest-priority pending task.")
+
+    total = len(scheduler.tasks)
+    done  = len(scheduler.get_tasks_by_status("completed"))
+    if total:
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Tasks", total)
+        c2.metric("Completed", done)
+        c3.metric("Pending", len(scheduler.get_tasks_by_status("pending")))
+        st.progress(done / total)
+        st.divider()
 
     next_task = scheduler.get_next_task()
     if next_task is None:

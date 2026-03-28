@@ -61,10 +61,14 @@
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+> I used the AI tool for drafting update summaries, brainstorming of uml and design of the UI and for debugging and refactoring. The prompts that got the most relevant and detailed answers are the ones that got full context and clear instructions on what outcome is wanted. 
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+> There have been more than once Claude had created draft of summaries more detailed and longer than what I wanted, therefore I had to trim it down. As for debugging, there's been a time where I had to point out a logical flaw(i.e. Pet could not exist without an Owner, hence Owner owns the task from which Scheduler should retrieve the tasks) in the way the task ownership was 'dedicated' between the Owner and Pet class to get Claude to correct the way the Scheduler was retrieving the task to create a plan.
 
 ---
 
@@ -75,10 +79,14 @@
 - What behaviors did you test?
 - Why were these tests important?
 
+> I have tested the create_plan of Scheduler, filtering, and recurring task occurences. These are necessary tests because the creating plans is one of the main feature of PawPal+, filtering tasks is handy when a user need quick search from the long list of tasks, and recurring is one of the handy features for users to set daily reminders of tasks they need to do. 
+
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
+
+> The scheduler should work mostly fine, if user does not try to break it intentionally, but I would add tests for species logic (dog walk vs. cat no-walk), the no-pets/no-tasks edge cases, and `reschedule()` behavior, since they are not yet covered by . 
 
 ---
 
@@ -88,10 +96,16 @@
 
 - What part of this project are you most satisfied with?
 
+> I was able to build much faster and proficiently with the use of Claude. Claude was also helpful in providing ideas and tips on how the code could be better.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+> Honestly, I built this under a rush of time, so next time, I need better time management or even just start earlier so I get more time to refine some of the feature more closely.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+> It can design decent systems, but not completely error-free. It needs the developer to review and redirect the development of the system as needed.
