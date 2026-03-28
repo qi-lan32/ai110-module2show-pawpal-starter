@@ -41,6 +41,36 @@ The `Scheduler` class was extended with several features to make plan generation
 - **Recurring task completion** — `complete_task()` marks a task done and, using `timedelta`, automatically adds the next occurrence for `"daily"` (tomorrow) and `"weekly"` (7 days out) tasks. One-time tasks are left as-is.
 - **Conflict detection** — `detect_conflicts()` scans pending tasks and returns plain warning strings, never crashing. It distinguishes `[CONFLICT]` (same pet, same time) from `[WARNING]` (different pets overlapping), and results are shown inline in the Schedule tab.
 
+## Testing PawPal+
+
+### Running the tests
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+### What the tests cover
+
+| Area | Tests |
+|---|---|
+| **Task status** | `mark_complete()` sets status to `"completed"` |
+| **Scheduler add** | Adding a task increments `scheduler.tasks` by 1 |
+| **Ownership guard** | `add_task()` raises `ValueError` for a pet not owned by the scheduler's owner |
+| **Filtering** | `get_tasks_for_pet()` returns only that pet's tasks; `get_tasks_by_status()` returns only matching-status tasks |
+| **Sorting** | `get_tasks_by_time()` returns tasks in chronological (ascending) order regardless of insertion order |
+| **Recurrence — daily** | Completing a daily task spawns a new pending task dated today + 1 day |
+| **Recurrence — weekly** | Completing a weekly task spawns a new pending task dated today + 7 days |
+| **Recurrence — one-time** | Completing a `recurrence=None` task does not spawn any new task |
+| **Conflict detection** | Same pet at the same time → `[CONFLICT]`; different pets at the same time → `[WARNING]` |
+
+### Confidence level
+
+⭐⭐⭐⭐ (4 / 5)
+
+The core scheduling behaviors — recurrence, sorting, filtering, and conflict detection — are fully tested. One star is held back because `create_plan()` species logic (dog walk vs. cat no-walk), the no-pets/no-tasks edge cases, and `reschedule()` behavior are not yet covered by automated tests.
+
+---
+
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.

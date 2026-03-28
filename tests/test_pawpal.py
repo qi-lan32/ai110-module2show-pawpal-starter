@@ -175,3 +175,54 @@ def test_complete_task_one_time_does_not_spawn():
 
     assert one_time.status == "completed"
     assert len(scheduler.tasks) == count_before
+
+
+# ── Sorting correctness ────────────────────────────────────────────────────────
+
+def test_get_tasks_by_time_returns_chronological_order():
+    """get_tasks_by_time() must return all tasks sorted by scheduled_time ascending."""
+    _, buddy, _, scheduler = _make_scheduler()
+
+    # Add tasks intentionally out of order
+    scheduler.add_task(Task("walk",    "14:00", "pending", 2, buddy))
+    scheduler.add_task(Task("feeding", "07:00", "pending", 3, buddy))
+    scheduler.add_task(Task("feeding", "18:00", "pending", 3, buddy))
+    scheduler.add_task(Task("walk",    "09:00", "pending", 2, buddy))
+
+    ordered = scheduler.get_tasks_by_time()
+    times = [t.scheduled_time for t in ordered]
+
+    assert times == sorted(times), f"Expected chronological order, got: {times}"
+
+
+# ── Conflict detection ─────────────────────────────────────────────────────────
+
+def test_detect_conflicts_same_pet_same_time():
+    """detect_conflicts() must emit a [CONFLICT] when one pet has two tasks at the same time."""
+    _, buddy, _, scheduler = _make_scheduler()
+
+    scheduler.add_task(Task("feeding", "08:00", "pending", 3, buddy))
+    scheduler.add_task(Task("walk",    "08:00", "pending", 2, buddy))
+
+    warnings = scheduler.detect_conflicts()
+
+    assert any("[CONFLICT]" in w for w in warnings), (
+        f"Expected a [CONFLICT] warning, got: {warnings}"
+    )
+
+
+def test_detect_conflicts_different_pets_same_time():
+    """detect_conflicts() must emit a [WARNING] when two different pets overlap, not [CONFLICT]."""
+    _, buddy, whiskers, scheduler = _make_scheduler()
+
+    scheduler.add_task(Task("walk",    "09:00", "pending", 2, buddy))
+    scheduler.add_task(Task("feeding", "09:00", "pending", 3, whiskers))
+
+    warnings = scheduler.detect_conflicts()
+
+    assert any("[WARNING]" in w for w in warnings), (
+        f"Expected a [WARNING], got: {warnings}"
+    )
+    assert not any("[CONFLICT]" in w for w in warnings), (
+        f"Got unexpected [CONFLICT] for different pets: {warnings}"
+    )
